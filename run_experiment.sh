@@ -35,7 +35,10 @@ echo "============================================================="
 cd src
 
 #python module_nn.py --init_type random --act_type ReLU --optimizer AdamW --init_scale 0.1
-python module_nn.py --init_type random --act_type ReLU --optimizer SGD --lr 0.1 --init_scale 0.01
+#python module_nn.py --init_type random --act_type ReLU --optimizer SGD --lr 0.1 --init_scale 0.01
 #python module_nn.py --init_type single-freq --act_type Quad --optimizer SGD --lr 0.1 --init_scale 0.02
 #python module_nn.py --init_type single-freq --act_type ReLU --optimizer SGD --lr 0.01 --init_scale 0.002
 #python module_nn.py --init_type random --act_type Quad --optimizer SGD --lr 0.1 --init_scale 0.1
+
+
+python module_nn.py --init_type random --act_type ReLU --optimizer AdamW --init_scale 0.1 --frac_train 0.75 --weight_decay 2 --lr 1e-4 --num_epochs 50000 --d_mlp 128

@@ -1,6 +1,5 @@
 src/wandb/
 notebooks/simulate_dynamics.ipynb
-notebooks/empirical_insight_grokk.ipynb
 
 # Claude AI files
 .claude/
