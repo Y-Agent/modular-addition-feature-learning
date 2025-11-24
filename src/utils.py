@@ -141,19 +141,38 @@ class Config:
 
 ########## Data Manager ##########
 def gen_train_test(config: Config):
-    '''Generate train and test split'''
+    '''Generate train and test split with precomputed labels as tensors'''
     num_to_generate = config.p
-    pairs = [(i, j) for i in range(num_to_generate) for j in range(num_to_generate)]
-    # Note: Global seeding already handled in Config.__init__, but keeping for extra safety
+
+    # Create data and labels as lists first
+    all_pairs = []
+    all_labels = []
+    for i in range(num_to_generate):
+        for j in range(num_to_generate):
+            all_pairs.append((i, j))
+            all_labels.append(config.fn(i, j))
+
+    # Convert to tensors on the appropriate device (GPU if available, CPU otherwise)
+    device = config.device if hasattr(config, 'device') else torch.device('cpu')
+    data_tensor = torch.tensor(all_pairs, device=device, dtype=torch.long)
+    labels_tensor = torch.tensor(all_labels, device=device, dtype=torch.long)
+
+    # Shuffle using torch operations for efficiency
     random.seed(config.seed)
-    random.shuffle(pairs)
-    
+    indices = torch.randperm(len(all_pairs), device=device)
+
+    data_tensor = data_tensor[indices]
+    labels_tensor = labels_tensor[indices]
+
     # If frac_train is 1, use the whole dataset for both train and test.
     if config.frac_train == 1:
-        return pairs, pairs
-    
-    div = int(config.frac_train * len(pairs))
-    return pairs[:div], pairs[div:]
+        return (data_tensor, labels_tensor), (data_tensor, labels_tensor)
+
+    div = int(config.frac_train * len(all_pairs))
+    train_data = (data_tensor[:div], labels_tensor[:div])
+    test_data = (data_tensor[div:], labels_tensor[div:])
+
+    return train_data, test_data
 
 ########## Training Managers ##########
 # Trainer class has been moved to NNTrainer.py
@@ -172,15 +191,22 @@ def cross_entropy_high_precision(logits, labels):
 
 def full_loss(config : Config, model: EmbedMLP, data):
     '''Takes the cross entropy loss of the model on the data'''
-    # Convert data to tensor and move to correct device
-    if not isinstance(data, torch.Tensor):
-        data = torch.tensor(data, device=config.device)
-    elif data.device != config.device:
-        data = data.to(config.device)
-    
-    # Take the final position only
-    logits = model(data)#[:, -1]
-    labels = torch.tensor([config.fn(i, j) for i, j in data]).to(config.device)
+    # Handle new format: data is (data_tensor, labels_tensor)
+    if isinstance(data, tuple) and len(data) == 2:
+        data_tensor, labels = data
+    else:
+        # Fallback for old format (list of pairs)
+        if not isinstance(data, torch.Tensor):
+            data_tensor = torch.tensor(data, device=config.device)
+        elif data.device != config.device:
+            data_tensor = data.to(config.device)
+        else:
+            data_tensor = data
+        # Compute labels (slow path for backward compatibility)
+        labels = torch.tensor([config.fn(i, j) for i, j in data_tensor]).to(config.device)
+
+    # Compute logits
+    logits = model(data_tensor)
     return cross_entropy_high_precision(logits, labels)
 
 def acc_rate(logits, labels):
@@ -190,14 +216,22 @@ def acc_rate(logits, labels):
     return accuracy
 
 def acc(config: Config, model: EmbedMLP, data):
-    # Convert data to tensor and move to correct device
-    if not isinstance(data, torch.Tensor):
-        data = torch.tensor(data, device=config.device)
-    elif data.device != config.device:
-        data = data.to(config.device)
-    
-    logits = model(data)
-    labels = torch.tensor([config.fn(i, j) for i, j in data]).to(config.device)
+    '''Compute accuracy of the model on the data'''
+    # Handle new format: data is (data_tensor, labels_tensor)
+    if isinstance(data, tuple) and len(data) == 2:
+        data_tensor, labels = data
+    else:
+        # Fallback for old format (list of pairs)
+        if not isinstance(data, torch.Tensor):
+            data_tensor = torch.tensor(data, device=config.device)
+        elif data.device != config.device:
+            data_tensor = data.to(config.device)
+        else:
+            data_tensor = data
+        # Compute labels (slow path for backward compatibility)
+        labels = torch.tensor([config.fn(i, j) for i, j in data_tensor]).to(config.device)
+
+    logits = model(data_tensor)
     predictions = torch.argmax(logits, dim=1)  # Get predicted class indices
     correct = (predictions == labels).sum().item()  # Count correct predictions
     accuracy = correct / labels.size(0)  # Calculate accuracy

@@ -68,11 +68,14 @@ class Trainer:
         test_path = os.path.join(self.save_dir, self.run_name, "test_data.pth")
         torch.save(self.train, train_path)
         torch.save(self.test, test_path)
-        
+
         # Dictionary to store metrics (train/test losses, etc.)
         self.metrics_dictionary = defaultdict(dict)
-        print('training length = ', len(self.train))
-        print('testing length = ', len(self.test))
+        # Handle new tuple format: (data_tensor, labels_tensor)
+        train_len = len(self.train[0]) if isinstance(self.train, tuple) else len(self.train)
+        test_len = len(self.test[0]) if isinstance(self.test, tuple) else len(self.test)
+        print('training length = ', train_len)
+        print('testing length = ', test_len)
         
         # Lists to store loss values during training
         self.train_losses = []
@@ -159,8 +162,8 @@ class Trainer:
             save_path = os.path.join(self.save_dir, self.run_name, 'init.pth')
             save_dict = {
                 'model': self.model.state_dict(),
-                'train_data': self.train,
-                'test_data': self.test
+                'train_data': self.train,  # Now a tuple of (data_tensor, labels_tensor)
+                'test_data': self.test     # Now a tuple of (data_tensor, labels_tensor)
             }
             torch.save(save_dict, save_path)
 
