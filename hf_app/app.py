@@ -1018,7 +1018,7 @@ def create_app():
             r"**Jianliang He, Leda Wang, Siyu Chen, Zhuoran Yang**" "\n"
             r"*Department of Statistics and Data Science, Yale University*" "\n\n"
             r'<a href="#">[arXiv]</a> &nbsp; '
-            r'<a href="#">[Blog]</a> &nbsp; '
+            r'<a href="https://y-agent.github.io/posts/modular_addition_feature_learning/">[Blog]</a> &nbsp; '
             r'<a href="https://github.com/Y-Agent/modular-addition-feature-learning">[Code]</a>' "\n\n"
             r"---" "\n\n"
             r"This interactive explorer visualizes how a two-layer neural network "

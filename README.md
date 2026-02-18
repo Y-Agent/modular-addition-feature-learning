@@ -5,7 +5,7 @@
 **Jianliang He, Leda Wang, Siyu Chen, Zhuoran Yang**
 *Department of Statistics and Data Science, Yale University*
 
-[[arXiv (coming soon)](#)] [[Blog (coming soon)](#)] [[Interactive Demo](https://huggingface.co/spaces/y-agent/modular-addition-feature-learning)]
+[[arXiv (coming soon)](#)] [[Blog](https://y-agent.github.io/posts/modular_addition_feature_learning/)] [[Interactive Demo](https://huggingface.co/spaces/y-agent/modular-addition-feature-learning)]
 
 ---
 
