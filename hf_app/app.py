@@ -901,27 +901,83 @@ def _commit_results_to_repo(p):
     """
     try:
         from huggingface_hub import HfApi
+        from huggingface_hub.utils import HfHubHTTPError
     except ImportError:
         return False, "huggingface_hub not installed"
 
-    space_id = os.environ.get("SPACE_ID")  # e.g. "username/space-name"
-    if not space_id:
-        return False, "Not running on HF Spaces (SPACE_ID not set)"
+    repo_id = (
+        os.environ.get("HF_SPACE_REPO_ID")
+        or os.environ.get("HF_REPO_ID")
+        or os.environ.get("SPACE_ID")
+        or ""
+    ).strip()
+    if not repo_id:
+        return False, "No target space repo found (set HF_SPACE_REPO_ID or SPACE_ID)"
+
+    # Accept "spaces/owner/name" and full URL forms, normalize to "owner/name".
+    for prefix in ("https://huggingface.co/spaces/", "http://huggingface.co/spaces/"):
+        if repo_id.startswith(prefix):
+            repo_id = repo_id[len(prefix):]
+    if repo_id.startswith("spaces/"):
+        repo_id = repo_id[len("spaces/"):]
+    repo_id = repo_id.strip("/")
+    if repo_id.count("/") != 1:
+        return False, (
+            f"Invalid space repo id '{repo_id}'. "
+            "Expected 'owner/space-name'."
+        )
+
+    token = None
+    token_var = None
+    for var_name in ("HF_TOKEN", "HUGGINGFACEHUB_API_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+        raw = os.environ.get(var_name, "").strip()
+        if raw:
+            token = raw
+            token_var = var_name
+            break
+    if not token:
+        return False, (
+            "Missing Hugging Face write token. Add a Space Secret named "
+            "HF_TOKEN with write access to this Space repo."
+        )
 
     result_dir = os.path.join(RESULTS_DIR, f"p_{p:03d}")
     if not os.path.isdir(result_dir):
         return False, "No results directory found"
 
     try:
-        api = HfApi()
+        api = HfApi(token=token)
+        who = api.whoami(token=token)
+        actor = who.get("name", "unknown-user")
         api.upload_folder(
             folder_path=result_dir,
             path_in_repo=f"precomputed_results/p_{p:03d}",
-            repo_id=space_id,
+            repo_id=repo_id,
             repo_type="space",
+            token=token,
             commit_message=f"Add precomputed results for p={p}",
         )
-        return True, f"Committed results for p={p} to {space_id}"
+        return True, (
+            f"Committed results for p={p} to {repo_id} "
+            f"(auth: {token_var}, user: {actor})"
+        )
+    except HfHubHTTPError as e:
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        if status in (401, 403):
+            msg = (
+                f"HF auth failed ({status}) for {repo_id}. "
+                "Set HF_TOKEN Space Secret to a valid WRITE token that can "
+                "push to this Space."
+            )
+        elif status == 404:
+            msg = (
+                f"Space repo '{repo_id}' not found. "
+                "Confirm owner/name and set HF_SPACE_REPO_ID if needed."
+            )
+        else:
+            msg = f"Hugging Face Hub error ({status}): {e}"
+        logger.warning(f"Failed to commit results for p={p}: {msg}")
+        return False, msg
     except Exception as e:
         logger.warning(f"Failed to commit results for p={p}: {e}")
         return False, str(e)
@@ -996,10 +1052,13 @@ def run_pipeline_for_p_streaming(p):
 
     n_files = len(os.listdir(result_dir)) if os.path.isdir(result_dir) else 0
 
-    # Try to commit results back to the HF repo
+    # Try to commit results back to the HF repo so they persist across restarts
     ok_commit, commit_msg = _commit_results_to_repo(p)
     if ok_commit:
-        yield f"Results saved to HF repo.", False, False
+        yield f"Results saved to HF repo (will persist across restarts).", False, False
+    else:
+        yield (f"Warning: could not save to HF repo: {commit_msg}. "
+               f"Results are available now but will be lost on restart."), False, False
 
     yield f"\nDone! Generated {n_files} files for p={p}.", False, True
 

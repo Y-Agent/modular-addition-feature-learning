@@ -7,3 +7,5 @@ Pillow>=9.0
 plotly>=5.0
 einops>=0.6
 scipy>=1.10
+huggingface_hub>=0.24
+hf_xet>=1.1.0

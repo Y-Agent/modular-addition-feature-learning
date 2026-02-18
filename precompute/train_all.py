@@ -22,6 +22,7 @@ import argparse
 import json
 import os
 import sys
+import time
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -165,8 +166,12 @@ def run_training(p, run_name, output_base, d_mlp_override=None):
     config = Config(config_dict)
     trainer = Trainer(config=config, use_wandb=False)
 
-    # Progress logging interval: print ~20 updates during training
-    log_interval = max(1, num_epochs // 20)
+    # Progress logging:
+    # - keep epoch-based logs reasonably frequent
+    # - also enforce a wall-clock heartbeat so streaming UIs stay active
+    log_interval = min(max(1, num_epochs // 20), 100)
+    max_silence_sec = 20
+    last_log_time = time.time()
 
     # Override save directory so checkpoints go into our output structure
     trainer.save_dir = output_dir
@@ -192,7 +197,12 @@ def run_training(p, run_name, output_base, d_mlp_override=None):
         train_loss, test_loss = trainer.do_a_training_step(epoch)
 
         # Progress logging
-        if epoch % log_interval == 0 or epoch == config.num_epochs - 1:
+        now = time.time()
+        if (
+            epoch % log_interval == 0
+            or epoch == config.num_epochs - 1
+            or (now - last_log_time) >= max_silence_sec
+        ):
             pct = 100 * (epoch + 1) / config.num_epochs
             train_acc = trainer.train_accs[-1] if trainer.train_accs else 0
             test_acc = trainer.test_accs[-1] if trainer.test_accs else 0
@@ -203,6 +213,7 @@ def run_training(p, run_name, output_base, d_mlp_override=None):
                   f"  train_acc={train_acc:.4f}"
                   f"  test_acc={test_acc:.4f}",
                   flush=True)
+            last_log_time = now
 
         if test_loss.item() < config.stopping_thresh:
             print(f"  Early stopping at epoch {epoch}: "
