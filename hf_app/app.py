@@ -1017,19 +1017,21 @@ def run_pipeline_for_p_streaming(p):
 
     env = os.environ.copy()
     env["PYTHONPATH"] = PROJECT_ROOT + ":" + env.get("PYTHONPATH", "")
+    # Force unbuffered child Python output so logs appear immediately in Gradio.
+    env["PYTHONUNBUFFERED"] = "1"
 
     steps = [
         ("Step 1/3: Training 5 configurations", [
-            sys.executable, "precompute/train_all.py",
+            sys.executable, "-u", "precompute/train_all.py",
             "--p", str(p), "--output", TRAINED_MODELS_DIR, "--resume",
         ]),
         ("Step 2/3: Generating model-based plots", [
-            sys.executable, "precompute/generate_plots.py",
+            sys.executable, "-u", "precompute/generate_plots.py",
             "--p", str(p), "--input", TRAINED_MODELS_DIR,
             "--output", RESULTS_DIR,
         ]),
         ("Step 3/3: Generating analytical plots", [
-            sys.executable, "precompute/generate_analytical.py",
+            sys.executable, "-u", "precompute/generate_analytical.py",
             "--p", str(p), "--output", RESULTS_DIR,
         ]),
     ]
@@ -1066,7 +1068,7 @@ def run_pipeline_for_p_streaming(p):
 def create_app():
     moduli = get_available_moduli()
     p_choices = [str(p) for p in moduli]
-    default_p = p_choices[0] if p_choices else None
+    default_p = str(max(moduli)) if moduli else None
 
     with gr.Blocks(
         title="Modular Addition Feature Learning",
