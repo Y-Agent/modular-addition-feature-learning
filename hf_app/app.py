@@ -363,12 +363,21 @@ def load_json_file(p, filename):
     return None
 
 
+_GROKK_FILENAMES = {
+    "grokk_abs_phase_diff.png", "grokk_avg_ipr.png",
+    "grokk_memorization_accuracy.png", "grokk_memorization_common_to_rare.png",
+    "grokk_decoded_weights_dynamic.png",
+}
+
+
 def safe_img(p, filename):
     """Return image path or None (Gradio handles None gracefully)."""
     path = os.path.join(_prime_dir(p), f"p{p:03d}_{filename}")
     exists = os.path.exists(path)
     if not exists:
-        logger.warning(f"Image not found: {path}")
+        # Suppress warnings for grokking files when p < MIN_P_GROKKING
+        if not (p < 19 and filename in _GROKK_FILENAMES):
+            logger.warning(f"Image not found: {path}")
     return path if exists else None
 
 
@@ -1040,7 +1049,7 @@ def create_app():
             generate_status = _md("")
             generate_log = gr.Code(
                 value="", language=None, label="Pipeline Log",
-                lines=15, interactive=False, visible=False,
+                lines=20, interactive=False, visible=False,
             )
 
         # ----- Tabs -----

@@ -158,11 +158,15 @@ def run_training(p, run_name, output_base, d_mlp_override=None):
         print(f"[SKIP] p={p}, run={run_name} already completed")
         return
 
+    num_epochs = run_params['num_epochs']
     print(f"[TRAIN] p={p}, d_mlp={d_mlp}, run={run_name}, "
-          f"epochs={run_params['num_epochs']}")
+          f"epochs={num_epochs}")
 
     config = Config(config_dict)
     trainer = Trainer(config=config, use_wandb=False)
+
+    # Progress logging interval: print ~20 updates during training
+    log_interval = max(1, num_epochs // 20)
 
     # Override save directory so checkpoints go into our output structure
     trainer.save_dir = output_dir
@@ -186,6 +190,19 @@ def run_training(p, run_name, output_base, d_mlp_override=None):
 
     for epoch in range(config.num_epochs):
         train_loss, test_loss = trainer.do_a_training_step(epoch)
+
+        # Progress logging
+        if epoch % log_interval == 0 or epoch == config.num_epochs - 1:
+            pct = 100 * (epoch + 1) / config.num_epochs
+            train_acc = trainer.train_accs[-1] if trainer.train_accs else 0
+            test_acc = trainer.test_accs[-1] if trainer.test_accs else 0
+            print(f"  [{run_name}] Epoch {epoch:>6d}/{config.num_epochs}"
+                  f"  ({pct:5.1f}%)"
+                  f"  train_loss={train_loss.item():.4f}"
+                  f"  test_loss={test_loss.item():.4f}"
+                  f"  train_acc={train_acc:.4f}"
+                  f"  test_acc={test_acc:.4f}",
+                  flush=True)
 
         if test_loss.item() < config.stopping_thresh:
             print(f"  Early stopping at epoch {epoch}: "
