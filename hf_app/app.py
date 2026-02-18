@@ -71,14 +71,7 @@ h1 {
     text-align: center !important;
     margin-bottom: 0.1em !important;
 }
-h3 {
-    font-family: "Palatino Linotype", "Book Antiqua", Palatino, "Libre Baskerville", Georgia, serif !important;
-    text-align: center !important;
-    color: var(--neutral-500) !important;
-    font-weight: normal !important;
-    margin-top: 0 !important;
-}
-h2, h4 {
+h2, h3, h4 {
     font-family: "Palatino Linotype", "Book Antiqua", Palatino, "Libre Baskerville", Georgia, serif !important;
 }
 blockquote {
@@ -87,22 +80,42 @@ blockquote {
     padding: 0.5em 1em !important;
     margin: 0.5em 0 !important;
 }
+/* Page subtitle only (centered gray) */
+.main-subtitle h3 {
+    text-align: center !important;
+    color: var(--neutral-500) !important;
+    font-weight: normal !important;
+    margin-top: 0 !important;
+}
 /* Larger tab titles */
 button.tab-nav {
     font-size: 1.1rem !important;
     font-weight: 600 !important;
 }
-/* Tab description text: larger and fully opaque */
+/* Tab description text: larger, fully opaque, high contrast */
 .prose {
     font-size: 1.05rem !important;
     opacity: 1 !important;
     color: var(--body-text-color) !important;
 }
-.prose h3, .prose h4 {
+.prose h3 {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--body-text-color) !important;
+    opacity: 1 !important;
+    text-align: left !important;
+}
+.prose h4 {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: var(--body-text-color) !important;
     opacity: 1 !important;
 }
 .prose p, .prose li, .prose blockquote {
     opacity: 1 !important;
+    color: var(--body-text-color) !important;
+}
+.prose strong {
     color: var(--body-text-color) !important;
 }
 """
@@ -1013,7 +1026,8 @@ def create_app():
             r"Fourier feature learning, lottery ticket dynamics, and the grokking "
             r"phenomenon. Select a modulo $p$ (any odd number $\geq 3$) below to view pre-computed results." "\n\n"
             r"> **Note:** Grokking experiments (Tab 6) require $p \geq 19$ to have enough data for a meaningful train/test split. "
-            r"For $p < 19$, grokking plots will not be generated."
+            r"For $p < 19$, grokking plots will not be generated.",
+            elem_classes=["main-subtitle"],
         )
 
         # Hidden state for current modulo
@@ -1041,10 +1055,11 @@ def create_app():
             with gr.Row():
                 new_p_input = gr.Number(
                     value=None, label="New p (odd, ≥ 3)",
-                    precision=0, scale=1,
+                    precision=0, scale=3,
                 )
                 generate_btn = gr.Button(
                     "Generate", variant="primary", scale=1,
+                    min_width=120,
                 )
             generate_status = _md("")
             generate_log = gr.Code(
