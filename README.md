@@ -1,3 +1,14 @@
+---
+title: Modular Addition Feature Learning
+emoji: 🔢
+colorFrom: blue
+colorTo: yellow
+sdk: gradio
+sdk_version: "6.5.1"
+app_file: hf_app/app.py
+pinned: false
+---
+
 # On the Mechanism and Dynamics of Modular Addition
 
 ### Fourier Features, Lottery Ticket, and Grokking
@@ -36,14 +47,55 @@ python hf_app/app.py
 
 ### Deploy to Hugging Face Spaces
 
-1. Create a new Space at [huggingface.co/new-space](https://huggingface.co/new-space) (SDK: Gradio)
-2. Push the repo:
-   ```bash
-   git remote add hf https://huggingface.co/spaces/YOUR_USERNAME/YOUR_SPACE_NAME
-   git push hf main
-   ```
-3. The app reads from `precomputed_results/` — the included examples (p=15, 23, 29, 31) work out of the box
-4. Users can generate results for additional $p$ values on-demand via the "Generate" button. New results are auto-committed back to the Space repo so they persist.
+We use the [Hugging Face Python API](https://huggingface.co/docs/huggingface_hub/) to upload to Spaces, since HF now requires [Xet storage](https://huggingface.co/docs/hub/xet) for binary files (PNGs, etc.) which standard `git push` does not handle.
+
+**First-time setup:**
+
+```bash
+pip install huggingface_hub hf_xet
+```
+
+Log in (get a **write** token from https://huggingface.co/settings/tokens):
+
+```bash
+huggingface-cli login
+```
+
+**Upload to the Space:**
+
+```python
+from huggingface_hub import HfApi
+api = HfApi()
+api.upload_folder(
+    folder_path=".",
+    repo_id="y-agent/modular-addition-feature-learning",
+    repo_type="space",
+    ignore_patterns=[
+        "trained_models/*", "saved_models/*", "src/saved_models/*",
+        ".git/*", ".claude/*", ".DS_Store", "tmp/*",
+        "notebooks/*", "figures/*", "__pycache__/*", "src/wandb/*",
+    ],
+    commit_message="Update app",
+)
+```
+
+Or as a one-liner from the project root:
+
+```bash
+python -c "
+from huggingface_hub import HfApi; HfApi().upload_folder(
+    folder_path='.', repo_id='y-agent/modular-addition-feature-learning',
+    repo_type='space', ignore_patterns=[
+        'trained_models/*','saved_models/*','src/saved_models/*',
+        '.git/*','.claude/*','.DS_Store','tmp/*',
+        'notebooks/*','figures/*','__pycache__/*','src/wandb/*'],
+    commit_message='Update app')
+"
+```
+
+**What gets uploaded:** Only the files the app needs — `hf_app/`, `precompute/`, `precomputed_results/`, `src/`, `requirements.txt`, `README.md`. Model checkpoints, notebooks, and figures are excluded.
+
+**On-demand training:** Users can generate results for new $p$ values directly from the app's "Generate" button. Streaming logs show real-time training progress. New results are auto-committed back to the Space repo so they persist across restarts.
 
 > **Tip:** For GPU-accelerated on-demand training, select a GPU runtime in your Space settings.
 
