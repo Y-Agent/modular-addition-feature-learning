@@ -92,6 +92,19 @@ button.tab-nav {
     font-size: 1.1rem !important;
     font-weight: 600 !important;
 }
+/* Tab description text: larger and fully opaque */
+.prose {
+    font-size: 1.05rem !important;
+    opacity: 1 !important;
+    color: var(--body-text-color) !important;
+}
+.prose h3, .prose h4 {
+    opacity: 1 !important;
+}
+.prose p, .prose li, .prose blockquote {
+    opacity: 1 !important;
+    color: var(--body-text-color) !important;
+}
 """
 
 # ---------------------------------------------------------------------------
@@ -194,9 +207,17 @@ $$\text{score for answer } j \;\propto\; \underbrace{\frac{p}{2} \cdot \mathbf{1
 
 The correct answer gets score $p/2$, but two **spurious ghost peaks** appear at $2x \bmod p$ and $2y \bmod p$ with score $p/4$. The correct answer always wins because $p/2 > p/4$, so the network always predicts correctly despite the ghosts.
 
-**Heatmap**: The network's output scores for all inputs with $x = 0$. The bright diagonal is the correct answer. The faint lines are the ghost peaks.
+#### Where Do the Ghost Peaks Come From?
 
-**Logit Explorer**: Pick an input pair $(x, y)$ to see the full score distribution. The correct answer (highlighted) should be the tallest bar.
+The ghost peaks are a structural artifact of the ReLU activation. Each neuron computes a product that contains a prefactor $\cos^2\!\bigl(\omega_k(x{-}y)/2\bigr)$. This prefactor depends on $x - y$ (not $x + y$) and is the same for all neurons in a frequency group, so it **cannot** be removed by noise cancellation. Expanding $\cos^2(\cdot) = \tfrac{1}{2}(1 + \cos(\cdot))$ and applying the product-to-sum identity produces the extra indicator terms at $2x$ and $2y$.
+
+Despite this imperfection, the margin between the correct answer and the ghost peaks is $p/4$ logits. After softmax, the predicted probability of the correct answer satisfies $\Pr[j_{\text{correct}}] \geq 1 - (p{-}1)\,e^{-aNp/8} \approx 1$, where $a$ is the common magnitude scale and $N$ is the number of neurons per frequency group. The error is exponentially small.
+
+#### Reading the Figures
+
+**Heatmap:** Each column corresponds to an input pair $(0, y)$ for $y = 0, 1, \ldots, p{-}1$ (fixing $x=0$). Each row is an output index $j$. Color intensity is the network's raw logit for that output. You should see three features: (1) a **bright diagonal** at $j = (0{+}y) \bmod p = y$ -- the correct answer with coefficient $p/2$; (2) a **horizontal line** at $j = 0$ (since $2x \bmod p = 0$ for $x=0$) with coefficient $p/4$; and (3) a **steeper diagonal** at $j = 2y \bmod p$ with coefficient $p/4$. The rectangular markers highlight these ghost positions.
+
+**Logit Explorer:** Select any input pair $(x, y)$ to see the full logit distribution as a bar chart. The correct answer $j = (x{+}y) \bmod p$ is highlighted and should be the tallest bar. The two ghost peaks at $j = 2x \bmod p$ and $j = 2y \bmod p$ should be roughly half as tall.
 """
 
 MATH_TAB5 = r"""
@@ -1063,7 +1084,7 @@ def create_app():
                     t3_phase_rel = gr.Image(
                         label="Phase Relationship (2\u03c6 vs \u03c8)", type="filepath"
                     )
-                t3_magnitude = gr.Image(label="Magnitude Distribution", type="filepath")
+                    t3_magnitude = gr.Image(label="Magnitude Distribution", type="filepath")
 
             # Tab 4: Output Logits
             with gr.Tab("4. Output Logits"):
@@ -1112,33 +1133,17 @@ def create_app():
                     )
                     t6_ipr = gr.Image(label="IPR & Parameter Norms", type="filepath")
 
-                _md(r"""#### (e) Memorization Accuracy Grid
+                _md(r"""#### (e) Memorization Accuracy, (f) Common-to-Rare Ordering, (g) Decoded Weights
 
-Each cell $(i,j)$ in the grid shows whether the network correctly predicts $(i+j) \bmod p$ at a given training epoch. **White = correct, dark = incorrect.** Training pairs are marked with dots.
+**(e) Accuracy grid:** Each cell $(i,j)$ shows whether the network correctly predicts $(i+j) \bmod p$. **White = correct, dark = incorrect.** Training pairs are marked with dots. The network first memorizes **symmetric pairs** (both $(i,j)$ and $(j,i)$ in training) because the architecture is input-symmetric. **Asymmetric pairs** are harder and learned later.
 
-During Stage I, the network first memorizes **symmetric pairs** -- pairs where both $(i,j)$ and $(j,i)$ are in the training set (they appear on both sides of the diagonal). These are learned first because the architecture treats inputs symmetrically: $\theta_m[i] + \theta_m[j] = \theta_m[j] + \theta_m[i]$, so learning one automatically gives the other.
+**(f) Common-to-rare:** The same grid reordered by pair frequency. Common pairs (top-left, both orderings in training) are memorized first; rare pairs (bottom-right, one ordering) last.
 
-**Asymmetric pairs** (where only one of $(i,j)$ or $(j,i)$ is in training) are harder to memorize and are learned later. Some test pairs may even be *actively suppressed* (the network gets them wrong on purpose) before eventually being memorized.""")
-                t6_memo = gr.Image(label="Memorization Accuracy", type="filepath")
-
-                _md(r"""#### (f) Common-to-Rare Ordering
-
-This plot reorders the accuracy grid to reveal the **memorization sequence**. Instead of plotting by input value, it sorts pairs by how "common" they are in the training set:
-
-- **Common pairs** (top-left): Both $(i,j)$ and $(j,i)$ in training set. These are memorized first.
-- **Rare pairs** (bottom-right): Only one ordering in training set. These are memorized last, and may be temporarily suppressed before being learned.
-
-The plot shows a clear **top-left to bottom-right** progression, confirming that the network memorizes common pairs before rare ones.""")
-                t6_memo_rare = gr.Image(label="Memorization: Common to Rare", type="filepath")
-
-                _md(r"""#### (g) Decoded Weights Across Stages
-
-DFT heatmaps of the network's weights at key epochs through the three stages. Each row is a neuron; each column is a Fourier frequency component.
-
-- **Stage I (memorization):** Weights are noisy with energy spread across many frequencies -- the network is using all available capacity to memorize.
-- **Stage II (generalization):** Weight decay kills the weak frequencies. Each neuron's energy concentrates into a single frequency -- clean Fourier features emerge.
-- **Stage III (cleanup):** Features are already clean; weight decay slowly shrinks overall magnitude without changing the structure.""")
-                t6_decoded = gr.Image(label="Decoded Weights Across Stages", type="filepath")
+**(g) Decoded weights:** DFT heatmaps at key epochs. **Stage I:** noisy, energy spread across many frequencies. **Stage II:** weight decay kills weak frequencies, each neuron concentrates into a single frequency. **Stage III:** features are clean; weight decay slowly shrinks magnitudes.""")
+                with gr.Row():
+                    t6_memo = gr.Image(label="Memorization Accuracy", type="filepath")
+                    t6_memo_rare = gr.Image(label="Common to Rare", type="filepath")
+                    t6_decoded = gr.Image(label="Decoded Weights Across Stages", type="filepath")
 
                 _md(r"""#### Accuracy Grid Across Training (Interactive)
 
