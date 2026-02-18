@@ -5,7 +5,7 @@
 **Jianliang He, Leda Wang, Siyu Chen, Zhuoran Yang**
 *Department of Statistics and Data Science, Yale University*
 
-[[arXiv (coming soon)](#)] [[Blog (coming soon)](#)] [[Interactive Demo (coming soon)](#)]
+[[arXiv (coming soon)](#)] [[Blog (coming soon)](#)] [[Interactive Demo](https://huggingface.co/spaces/y-agent/modular-addition-feature-learning)]
 
 ---
 
@@ -151,7 +151,7 @@ Interactive analysis notebooks in `notebooks/`:
 ### Installation
 
 ```bash
-git clone https://github.com/your-org/modular-addition-feature-learning.git
+git clone https://github.com/Y-Agent/modular-addition-feature-learning.git
 cd modular-addition-feature-learning
 pip install -r requirements.txt
 ```

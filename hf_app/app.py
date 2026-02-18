@@ -987,7 +987,7 @@ def create_app():
             r"*Department of Statistics and Data Science, Yale University*" "\n\n"
             r'<a href="#">[arXiv]</a> &nbsp; '
             r'<a href="#">[Blog]</a> &nbsp; '
-            r'<a href="#">[Code]</a>' "\n\n"
+            r'<a href="https://github.com/Y-Agent/modular-addition-feature-learning">[Code]</a>' "\n\n"
             r"---" "\n\n"
             r"This interactive explorer visualizes how a two-layer neural network "
             r"learns modular arithmetic $f(x,y) = (x + y) \bmod p$ through "
