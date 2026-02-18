@@ -42,7 +42,7 @@ RESULTS_DIR = os.path.join(PROJECT_ROOT, "precomputed_results")
 TRAINED_MODELS_DIR = os.path.join(PROJECT_ROOT, "trained_models")
 
 # Max p for on-demand training (d_mlp grows as O(p^2), memory limit)
-MAX_P_ON_DEMAND = 97
+MAX_P_ON_DEMAND = 99
 
 COLORS = ['#0D2758', '#60656F', '#DEA54B', '#A32015', '#347186']
 STAGE_COLORS = ['rgba(212,175,55,0.15)', 'rgba(139,115,85,0.15)', 'rgba(192,192,192,0.15)']
