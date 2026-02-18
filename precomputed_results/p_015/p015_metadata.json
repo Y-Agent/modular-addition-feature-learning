@@ -1,0 +1,82 @@
+{
+  "prime": 15,
+  "d_mlp": 512,
+  "training_runs": {
+    "standard": {
+      "act_type": "ReLU",
+      "lr": 5e-05,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "random",
+      "init_scale": 0.1,
+      "optimizer": "AdamW"
+    },
+    "grokking": {
+      "act_type": "ReLU",
+      "lr": 0.0001,
+      "weight_decay": 2.0,
+      "num_epochs": 50000,
+      "frac_train": 0.75,
+      "init_type": "random",
+      "init_scale": 0.1,
+      "optimizer": "AdamW"
+    },
+    "quad_random": {
+      "act_type": "Quad",
+      "lr": 5e-05,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "random",
+      "init_scale": 0.1,
+      "optimizer": "AdamW"
+    },
+    "quad_single_freq": {
+      "act_type": "Quad",
+      "lr": 0.1,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "single-freq",
+      "init_scale": 0.02,
+      "optimizer": "SGD"
+    },
+    "relu_single_freq": {
+      "act_type": "ReLU",
+      "lr": 0.01,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "single-freq",
+      "init_scale": 0.002,
+      "optimizer": "SGD"
+    }
+  },
+  "final_metrics": {
+    "standard": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 0.020928841084241867,
+      "test_loss": 0.020928841084241867
+    },
+    "quad_random": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 0.0036203155759721994,
+      "test_loss": 0.0036203155759721994
+    },
+    "quad_single_freq": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 0.04876862093806267,
+      "test_loss": 0.04876862093806267
+    },
+    "relu_single_freq": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 2.7064406871795654,
+      "test_loss": 2.7064406871795654
+    }
+  }
+}

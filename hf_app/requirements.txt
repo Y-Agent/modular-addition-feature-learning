@@ -1,0 +1,9 @@
+gradio>=4.0
+torch>=2.0.0
+--extra-index-url https://download.pytorch.org/whl/cpu
+numpy>=1.24
+matplotlib>=3.7
+Pillow>=9.0
+plotly>=5.0
+einops>=0.6
+scipy>=1.10

@@ -1,4 +1,4 @@
-import yaml, os, time, wandb
+import yaml, os, time
 import numpy as np
 import torch
 import torch.optim as optim
@@ -7,6 +7,12 @@ import torch.nn.functional as F
 from collections import defaultdict
 from typing import Optional
 
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+
 from model_base import EmbedMLP
 from utils import Config, gen_train_test, full_loss, acc, cross_entropy_high_precision
 
@@ -14,7 +20,8 @@ from utils import Config, gen_train_test, full_loss, acc, cross_entropy_high_pre
 class Trainer:
     '''Trainer class for managing the training process of a model'''
 
-    def __init__(self, config: Config, model: Optional[EmbedMLP] = None) -> None:
+    def __init__(self, config: Config, model: Optional[EmbedMLP] = None, use_wandb: bool = True) -> None:
+        self.use_wandb = use_wandb and WANDB_AVAILABLE
                
         # Use a given model or initialize a new Transformer model with the provided config
         self.model = model if model is not None else EmbedMLP(
@@ -54,7 +61,8 @@ class Trainer:
         self.run_name = f"p_{config.p}_dmlp_{config.d_mlp}_{config.act_type}_{config.init_type}_{init_scale_str}_decay_{config.weight_decay}_{formatted_time}"
         
         # Initialize experiment logging with wandb (Weights and Biases)
-        wandb.init(project="modular_addition", config=config, name=self.run_name)
+        if self.use_wandb:
+            wandb.init(project="modular_addition", config=config, name=self.run_name)
         
         # Define the directory where model checkpoints will be saved
         self.save_dir = "saved_models"
@@ -98,13 +106,13 @@ class Trainer:
             'train_accuracy': self.train_accs[-1],
             'epoch': epoch,
         }
-        if save_to_wandb:
-            wandb.log(save_dict)  # Log to wandb
+        if save_to_wandb and self.use_wandb:
+            wandb.log(save_dict)
             config_dict = {
                 k: (str(v) if isinstance(v, torch.device) else v)
                 for k, v in self.config.__dict__.items()
             }
-            wandb.log(config_dict) 
+            wandb.log(config_dict)
             print("Saved epoch to wandb")
         if self.config.save_models or local_save: 
             # Save model state to a file
@@ -184,7 +192,7 @@ class Trainer:
             # Optionally save optimizer and scheduler states
             save_dict['optimizer'] = self.optimizer.state_dict()
             save_dict['scheduler'] = self.scheduler.state_dict()
-        if log_to_wandb:
+        if log_to_wandb and self.use_wandb:
             wandb.log(save_dict)
         torch.save(save_dict, save_path)
         print(f"Saved model to {save_path}")

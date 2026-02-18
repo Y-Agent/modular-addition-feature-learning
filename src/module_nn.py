@@ -77,7 +77,8 @@ def parse_arguments():
     # Special flags
     parser.add_argument('--config', type=str, help='Path to custom config file')
     parser.add_argument('--dry_run', action='store_true', help='Print config and exit without training')
-    
+    parser.add_argument('--no_wandb', action='store_true', help='Disable wandb logging')
+
     return parser.parse_args()
 
 
@@ -117,8 +118,8 @@ def override_config(config_dict, args):
             result['model'][param] = flat_config[param]
     
     # Training parameters
-    training_params = ['num_epochs', 'lr', 'weight_decay', 'optimizer', 'stopping_thresh', 
-                      'save_models', 'save_every', 'seed']
+    training_params = ['num_epochs', 'lr', 'weight_decay', 'optimizer', 'stopping_thresh',
+                      'save_models', 'save_every', 'seed', 'no_wandb']
     for param in training_params:
         if param in flat_config:
             result['training'][param] = flat_config[param]
@@ -147,7 +148,8 @@ def run_experiment(config_dict):
     print("-" * 80)
     
     # Initialize trainer
-    world = Trainer(config=pipeline_config)
+    use_wandb = not getattr(pipeline_config, 'no_wandb', False)
+    world = Trainer(config=pipeline_config, use_wandb=use_wandb)
     print(f'Run name: {world.run_name}')
     world.initial_save_if_appropriate()
     
