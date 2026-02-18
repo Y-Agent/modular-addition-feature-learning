@@ -1157,17 +1157,33 @@ def create_app():
                     )
                     t6_ipr = gr.Image(label="IPR & Parameter Norms", type="filepath")
 
-                _md(r"""#### (e) Memorization Accuracy, (f) Common-to-Rare Ordering, (g) Decoded Weights
+                _md(r"""#### (e) Memorization Accuracy Grid
 
-**(e) Accuracy grid:** Each cell $(i,j)$ shows whether the network correctly predicts $(i+j) \bmod p$. **White = correct, dark = incorrect.** Training pairs are marked with dots. The network first memorizes **symmetric pairs** (both $(i,j)$ and $(j,i)$ in training) because the architecture is input-symmetric. **Asymmetric pairs** are harder and learned later.
+Each cell $(i,j)$ in the grid shows whether the network correctly predicts $(i+j) \bmod p$ at a given training epoch. **White = correct, dark = incorrect.** Training pairs are marked with dots.
 
-**(f) Common-to-rare:** The same grid reordered by pair frequency. Common pairs (top-left, both orderings in training) are memorized first; rare pairs (bottom-right, one ordering) last.
+During Stage I, the network first memorizes **symmetric pairs** -- pairs where both $(i,j)$ and $(j,i)$ are in the training set (they appear on both sides of the diagonal). These are learned first because the architecture treats inputs symmetrically: $\theta_m[i] + \theta_m[j] = \theta_m[j] + \theta_m[i]$, so learning one automatically gives the other.
 
-**(g) Decoded weights:** DFT heatmaps at key epochs. **Stage I:** noisy, energy spread across many frequencies. **Stage II:** weight decay kills weak frequencies, each neuron concentrates into a single frequency. **Stage III:** features are clean; weight decay slowly shrinks magnitudes.""")
-                with gr.Row():
-                    t6_memo = gr.Image(label="Memorization Accuracy", type="filepath")
-                    t6_memo_rare = gr.Image(label="Common to Rare", type="filepath")
-                    t6_decoded = gr.Image(label="Decoded Weights Across Stages", type="filepath")
+**Asymmetric pairs** (where only one of $(i,j)$ or $(j,i)$ is in training) are harder to memorize and are learned later. Some test pairs may even be *actively suppressed* (the network gets them wrong on purpose) before eventually being memorized.""")
+                t6_memo = gr.Image(label="Memorization Accuracy", type="filepath")
+
+                _md(r"""#### (f) Common-to-Rare Ordering
+
+This plot reorders the accuracy grid to reveal the **memorization sequence**. Instead of plotting by input value, it sorts pairs by how "common" they are in the training set:
+
+- **Common pairs** (top-left): Both $(i,j)$ and $(j,i)$ in training set. These are memorized first.
+- **Rare pairs** (bottom-right): Only one ordering in training set. These are memorized last, and may be temporarily suppressed before being learned.
+
+The plot shows a clear **top-left to bottom-right** progression, confirming that the network memorizes common pairs before rare ones.""")
+                t6_memo_rare = gr.Image(label="Memorization: Common to Rare", type="filepath")
+
+                _md(r"""#### (g) Decoded Weights Across Stages
+
+DFT heatmaps of the network's weights at key epochs through the three stages. Each row is a neuron; each column is a Fourier frequency component.
+
+- **Stage I (memorization):** Weights are noisy with energy spread across many frequencies -- the network is using all available capacity to memorize.
+- **Stage II (generalization):** Weight decay kills the weak frequencies. Each neuron's energy concentrates into a single frequency -- clean Fourier features emerge.
+- **Stage III (cleanup):** Features are already clean; weight decay slowly shrinks overall magnitude without changing the structure.""")
+                t6_decoded = gr.Image(label="Decoded Weights Across Stages", type="filepath")
 
                 _md(r"""#### Accuracy Grid Across Training (Interactive)
 
