@@ -1,14 +1,3 @@
----
-title: Modular Addition Feature Learning
-emoji: 🔢
-colorFrom: blue
-colorTo: yellow
-sdk: gradio
-sdk_version: "6.5.1"
-app_file: hf_app/app.py
-pinned: false
----
-
 # On the Mechanism and Dynamics of Modular Addition
 
 ### Fourier Features, Lottery Ticket, and Grokking
@@ -28,14 +17,7 @@ This repository provides the code for studying how a two-layer neural network le
 2. **Lottery Ticket Dynamics** — Random initialization determines which frequency each neuron will specialize in: the frequency with the best initial phase alignment wins a winner-take-all competition.
 3. **Grokking** — Under partial data with weight decay, the network first memorizes, then suddenly generalizes through a three-stage process: memorization → sparsification → cleanup.
 
-## Interactive Demo
-
-An interactive Gradio app visualizes all results with math explanations and interactive Plotly charts:
-
-- **9 analysis tabs** covering mechanism, dynamics, grokking, and analytical simulations
-- **Interactive features**: neuron frequency inspector, logit explorer, grokking epoch slider
-- **On-demand training**: generate results for any odd $p \geq 3$ directly from the app
-- **Pre-computed examples** included for $p = 15, 23, 29, 31$
+An [**Interactive Demo**](https://huggingface.co/spaces/y-agent/modular-addition-feature-learning) on Hugging Face Spaces visualizes all results with 9 analysis tabs, interactive Plotly charts, and on-demand training for any odd $p \geq 3$. Pre-computed examples are included for $p = 15, 23, 29, 31$.
 
 ### Launch Locally
 
@@ -63,35 +45,13 @@ huggingface-cli login
 
 **Upload to the Space:**
 
-```python
-from huggingface_hub import HfApi
-api = HfApi()
-api.upload_folder(
-    folder_path=".",
-    repo_id="y-agent/modular-addition-feature-learning",
-    repo_type="space",
-    ignore_patterns=[
-        "trained_models/*", "saved_models/*", "src/saved_models/*",
-        ".git/*", ".claude/*", ".DS_Store", "tmp/*",
-        "notebooks/*", "figures/*", "__pycache__/*", "src/wandb/*",
-    ],
-    commit_message="Update app",
-)
-```
-
-Or as a one-liner from the project root:
-
 ```bash
-python -c "
-from huggingface_hub import HfApi; HfApi().upload_folder(
-    folder_path='.', repo_id='y-agent/modular-addition-feature-learning',
-    repo_type='space', ignore_patterns=[
-        'trained_models/*','saved_models/*','src/saved_models/*',
-        '.git/*','.claude/*','.DS_Store','tmp/*',
-        'notebooks/*','figures/*','__pycache__/*','src/wandb/*'],
-    commit_message='Update app')
-"
+python deploy_to_hf.py
+# or with a custom commit message:
+python deploy_to_hf.py --message "Update app"
 ```
+
+The deploy script prepends the required HuggingFace Space metadata (SDK config, app path, etc.) to `README.md` before uploading, so the GitHub README stays clean.
 
 **What gets uploaded:** Only the files the app needs — `hf_app/`, `precompute/`, `precomputed_results/`, `src/`, `requirements.txt`, `README.md`. Model checkpoints, notebooks, and figures are excluded.
 
