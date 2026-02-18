@@ -1691,12 +1691,8 @@ class PlotGenerator:
             _save_fig(fig, self._out(f'phase_align_{prefix}.png'))
 
             # ---- Decoded weights at timepoints ----
-            # Use fixed timepoints matching the notebook figures:
-            #   Quad: steps 0, 1000, 5000   ReLU: steps 0, 5000
-            if prefix == 'quad':
-                target_keys = [0, 1000, 5000]
-            else:
-                target_keys = [0, 5000]
+            # Use fixed timepoints: steps 0, 1000, 5000 for both Quad and ReLU
+            target_keys = [0, 1000, 5000]
             # Snap each target to the nearest available checkpoint epoch
             keys = []
             for t in target_keys:
