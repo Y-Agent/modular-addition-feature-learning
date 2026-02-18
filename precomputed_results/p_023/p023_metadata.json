@@ -36,7 +36,7 @@
       "act_type": "Quad",
       "lr": 0.1,
       "weight_decay": 0,
-      "num_epochs": 5000,
+      "num_epochs": 10000,
       "frac_train": 1.0,
       "init_type": "single-freq",
       "init_scale": 0.02,
@@ -46,7 +46,7 @@
       "act_type": "ReLU",
       "lr": 0.01,
       "weight_decay": 0,
-      "num_epochs": 5000,
+      "num_epochs": 10000,
       "frac_train": 1.0,
       "init_type": "single-freq",
       "init_scale": 0.002,
@@ -75,14 +75,14 @@
     "quad_single_freq": {
       "train_acc": 1.0,
       "test_acc": 1.0,
-      "train_loss": 3.109675407409668,
-      "test_loss": 3.109675407409668
+      "train_loss": 0.0067531997337937355,
+      "test_loss": 0.0067531997337937355
     },
     "relu_single_freq": {
       "train_acc": 1.0,
       "test_acc": 1.0,
-      "train_loss": 3.1348023414611816,
-      "test_loss": 3.1348023414611816
+      "train_loss": 3.132883071899414,
+      "test_loss": 3.132883071899414
     }
   }
 }

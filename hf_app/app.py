@@ -87,6 +87,11 @@ blockquote {
     padding: 0.5em 1em !important;
     margin: 0.5em 0 !important;
 }
+/* Larger tab titles */
+button.tab-nav {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+}
 """
 
 # ---------------------------------------------------------------------------
@@ -529,14 +534,11 @@ def make_grokk_heatmap(data, epoch_index):
 # ---------------------------------------------------------------------------
 
 def update_tab1(p):
-    """Overview: standard + grokking loss/IPR, phase scatter."""
-    img_overview = safe_img(p, "overview_loss_ipr.png")
+    """Overview: standard loss, grokking loss, grokking IPR, phase scatter."""
     img_phase = safe_img(p, "overview_phase_scatter.png")
-    # Also build interactive charts from overview.json
     data = load_json_file(p, "overview.json")
     std_loss_chart = None
     grokk_loss_chart = None
-    std_ipr_chart = None
     grokk_ipr_chart = None
 
     if data:
@@ -550,27 +552,11 @@ def update_tab1(p):
                 name='Train Loss', line=dict(color=COLORS[0]),
             ))
             fig.update_layout(
-                title='Standard: Training Loss (ReLU, full data)',
+                title='Full Data: Training Loss',
                 xaxis_title='Step', yaxis_title='Loss',
                 template='plotly_white', height=350,
             )
             std_loss_chart = fig
-
-        # Standard IPR chart
-        std_ipr = data.get('std_ipr', [])
-        if std_ipr:
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=_to_np(std_ep[:len(std_ipr)]), y=_to_np(std_ipr),
-                name='Avg IPR', line=dict(color=COLORS[3]),
-            ))
-            fig.update_layout(
-                title='Standard: IPR (Fourier Sparsity)',
-                xaxis_title='Step', yaxis_title='IPR',
-                yaxis=dict(range=[0, 1.05]),
-                template='plotly_white', height=350,
-            )
-            std_ipr_chart = fig
 
         # Grokking loss chart
         grokk_ep = data.get('grokk_epochs', [])
@@ -589,7 +575,7 @@ def update_tab1(p):
                     name='Test Loss', line=dict(color=COLORS[3]),
                 ))
             fig.update_layout(
-                title='Grokking: Loss (ReLU, 75% data, WD)',
+                title='Grokking: Loss (75% data, weight decay)',
                 xaxis_title='Step', yaxis_title='Loss',
                 template='plotly_white', height=350,
             )
@@ -611,14 +597,14 @@ def update_tab1(p):
             )
             grokk_ipr_chart = fig
 
-    return (img_overview, std_loss_chart, grokk_loss_chart,
-            std_ipr_chart, grokk_ipr_chart, img_phase)
+    return (std_loss_chart, grokk_loss_chart, grokk_ipr_chart, img_phase)
 
 
 def update_tab2(p):
     """Fourier Weights: heatmap + line plots."""
     return (
-        safe_img(p, "full_training_para_origin.png"),
+        safe_img(p, "dft_heatmap_in.png"),
+        safe_img(p, "dft_heatmap_out.png"),
         safe_img(p, "lineplot_in.png"),
         safe_img(p, "lineplot_out.png"),
     )
@@ -783,10 +769,10 @@ def on_p_change(p_str):
     info = update_info(p)
 
     # Overview
-    (t1_img_overview, t1_std_loss, t1_grokk_loss,
-     t1_std_ipr, t1_grokk_ipr, t1_phase_scatter) = update_tab1(p)
+    (t1_std_loss, t1_grokk_loss,
+     t1_grokk_ipr, t1_phase_scatter) = update_tab1(p)
     # Core Interpretability
-    t2_heatmap, t2_line_in, t2_line_out = update_tab2(p)
+    t2_heatmap_in, t2_heatmap_out, t2_line_in, t2_line_out = update_tab2(p)
     t3_phase_dist, t3_phase_rel, t3_magnitude = update_tab3(p)
     t4_logits = update_tab4(p)
     t5_mag, t5_phase, t5_contour = update_tab5(p)
@@ -838,10 +824,10 @@ def on_p_change(p_str):
     return [
         info,
         # Tab 1: Overview
-        t1_img_overview, t1_std_loss, t1_grokk_loss,
-        t1_std_ipr, t1_grokk_ipr, t1_phase_scatter,
+        t1_std_loss, t1_grokk_loss,
+        t1_grokk_ipr, t1_phase_scatter,
         # Tab 2: Fourier Weights
-        t2_heatmap, t2_line_in, t2_line_out,
+        t2_heatmap_in, t2_heatmap_out, t2_line_in, t2_line_out,
         neuron_dd_update, neuron_chart,
         # Tab 3: Phase Analysis
         t3_phase_dist, t3_phase_rel, t3_magnitude,
@@ -1044,23 +1030,21 @@ def create_app():
             # Tab 1: Overview
             with gr.Tab("1. Overview"):
                 _md(MATH_TAB1)
-                t1_img_overview = gr.Image(
-                    label="Loss & IPR Overview (Static)", type="filepath"
-                )
                 with gr.Row():
-                    t1_std_loss = gr.Plot(label="Standard: Loss")
+                    t1_std_loss = gr.Plot(label="Full Data: Loss")
                     t1_grokk_loss = gr.Plot(label="Grokking: Loss")
                 with gr.Row():
-                    t1_std_ipr = gr.Plot(label="Standard: IPR")
+                    t1_phase_scatter = gr.Image(
+                        label="Phase Alignment: \u03c8 = 2\u03c6 (full data)", type="filepath"
+                    )
                     t1_grokk_ipr = gr.Plot(label="Grokking: IPR")
-                t1_phase_scatter = gr.Image(
-                    label="Phase Alignment: \u03c8 = 2\u03c6", type="filepath"
-                )
 
             # Tab 2: Fourier Weights
             with gr.Tab("2. Fourier Weights"):
                 _md(MATH_TAB2)
-                t2_heatmap = gr.Image(label="Decoded W_in / W_out Heatmap", type="filepath")
+                with gr.Row():
+                    t2_heatmap_in = gr.Image(label="W_E (First-Layer) DFT", type="filepath")
+                    t2_heatmap_out = gr.Image(label="W_L (Second-Layer) DFT", type="filepath")
                 with gr.Row():
                     t2_line_in = gr.Image(label="First-Layer Line Plots (with cosine fit)", type="filepath")
                     t2_line_out = gr.Image(label="Second-Layer Line Plots (with cosine fit)", type="filepath")
@@ -1222,10 +1206,10 @@ Use the slider to scrub through training epochs and watch the accuracy grid evol
         all_outputs = [
             info_md,
             # Tab 1: Overview
-            t1_img_overview, t1_std_loss, t1_grokk_loss,
-            t1_std_ipr, t1_grokk_ipr, t1_phase_scatter,
+            t1_std_loss, t1_grokk_loss,
+            t1_grokk_ipr, t1_phase_scatter,
             # Tab 2
-            t2_heatmap, t2_line_in, t2_line_out,
+            t2_heatmap_in, t2_heatmap_out, t2_line_in, t2_line_out,
             t2_neuron_dd, t2_neuron_chart,
             # Tab 3
             t3_phase_dist, t3_phase_rel, t3_magnitude,

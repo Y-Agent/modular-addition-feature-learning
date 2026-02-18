@@ -161,7 +161,7 @@ The table below maps every figure in the blog post to the corresponding file gen
 
 | Blog Figure | Description | Pipeline Output | Tab | Verified? |
 |-------------|-------------|----------------|-----|-----------|
-| **Fig. 2** — Fourier sparsity of learned weights | DFT heatmap: each row is a neuron, each column is a Fourier mode (cos k, sin k). Sparse = one bright cell per row, confirming single-frequency specialization. | `pXXX_full_training_para_origin.png` | 2 | The heatmap applies `W_in @ fourier_basis.T` and `W_out.T @ fourier_basis.T` to show DFT coefficients. X-axis labels are Fourier mode names (Const, cos 1, sin 1, ...). Sparsity is visible as one dominant pair per neuron row. |
+| **Fig. 2** — Fourier sparsity of learned weights | DFT heatmap: each row is a neuron, each column is a Fourier mode (cos k, sin k). Sparse = one bright cell per row, confirming single-frequency specialization. | `pXXX_dft_heatmap_in.png`, `pXXX_dft_heatmap_out.png` | 2 | The heatmap applies `W_in @ fourier_basis.T` and `W_out.T @ fourier_basis.T` to show DFT coefficients. X-axis labels are Fourier mode names (Const, cos 1, sin 1, ...). Sparsity is visible as one dominant pair per neuron row. |
 | **Fig. 3** — Cosine fits to individual neurons | Raw learned weight values (dots) vs. best-fit cosine (dashed) for 3 representative neurons. Left: input weights θ_m. Right: output weights ξ_m. | `pXXX_lineplot_in.png`, `pXXX_lineplot_out.png` | 2 | Projects raw weights into Fourier space, keeps top-2 components, projects back. The fit quality demonstrates that each neuron is well-described by a single cosine. |
 | **Fig. 4** — Phase alignment ψ = 2φ | Scatter plot of (2φ_m mod 2π) vs (ψ_m mod 2π). All points lie on the diagonal y = x. | `pXXX_phase_relationship.png` | 3 | Computed via `compute_neuron()` for every neuron. The diagonal pattern is Observation 2 from the paper. |
 | **Fig. 5** — Higher-order phase symmetry | Polar plot: phase angles ι·φ_m on concentric rings for ι = 1, 2, 3, 4. Uniform spread confirms the cancellation condition Σ exp(i·ι·φ_m) ≈ 0. | `pXXX_phase_distribution.png` | 3 | Shows phases for the most common frequency group. For large p with many neurons, the uniform spread is clearly visible. |
@@ -237,7 +237,8 @@ precomputed_results/p_023/
   p023_overview.json                  # Interactive data
 
   # Tab 2: Fourier Weights (Blog: Figures 2, 3)
-  p023_full_training_para_origin.png  # DFT heatmap (Fig. 2)
+  p023_dft_heatmap_in.png             # DFT heatmap, W_E input layer (Fig. 2)
+  p023_dft_heatmap_out.png            # DFT heatmap, W_L output layer (Fig. 2)
   p023_lineplot_in.png                # Cosine fits, input layer (Fig. 3 left)
   p023_lineplot_out.png               # Cosine fits, output layer (Fig. 3 right)
   p023_neuron_spectra.json            # Interactive: neuron inspector

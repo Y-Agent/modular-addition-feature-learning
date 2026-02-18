@@ -454,7 +454,7 @@ class PlotGenerator:
     # ------------------------------------------------------------------
 
     def generate_tab2(self):
-        """Generate full_training_para_origin.png, lineplot_in.png, lineplot_out.png."""
+        """Generate dft_heatmap_in.png, dft_heatmap_out.png, lineplot_in.png, lineplot_out.png."""
         print(f"  [Tab 2] Fourier Weights for p={self.p}")
         run_dir = self._run_dir('standard')
         if run_dir is None:
@@ -494,54 +494,52 @@ class PlotGenerator:
         ranked_W_in_raw = W_in_raw[sort_order, :]
         ranked_W_out_raw = W_out_raw[sort_order, :]
 
-        # ---- Heatmap plot (DFT coefficients, matching blog Figure 2) ----
+        # ---- Heatmap plots (DFT coefficients, matching blog Figure 2) ----
+        # Save as two separate images for side-by-side display in the app
         fb_names = self.fourier_basis_names
         n_modes = len(fb_names)
-        fig_w = max(8, n_modes * 0.4)
-        fig_h = max(8, num_neurons * 0.35 + 3)
-        fig, axes = plt.subplots(
-            2, 1, figsize=(fig_w, fig_h), constrained_layout=True,
-            gridspec_kw={"hspace": 0.15}
-        )
+        fig_w = max(6, n_modes * 0.35)
+        fig_h = max(5, num_neurons * 0.3 + 2)
+        y_locs = np.arange(num_neurons)
+        x_locs = np.arange(n_modes)
 
-        # W_in DFT
-        ax_in = axes[0]
+        # W_in DFT (first-layer / W_E)
         W_in_np = ranked_W_in_dft.detach().cpu().numpy()
         abs_max_in = np.abs(W_in_np).max()
+        fig_in, ax_in = plt.subplots(figsize=(fig_w, fig_h), constrained_layout=True)
         im_in = ax_in.imshow(
             W_in_np,
             cmap=CMAP_DIVERGING, vmin=-abs_max_in, vmax=abs_max_in,
             aspect='auto'
         )
-        ax_in.set_title(r'First-Layer $\theta_m$ after DFT', fontsize=18)
-        fig.colorbar(im_in, ax=ax_in, shrink=0.8)
-        y_locs = np.arange(num_neurons)
+        ax_in.set_title(r'First-Layer $\theta_m$ (W$_E$) after DFT', fontsize=16)
+        fig_in.colorbar(im_in, ax=ax_in, shrink=0.8)
         ax_in.set_yticks(y_locs)
         ax_in.set_yticklabels(y_locs, fontsize=10)
         ax_in.set_ylabel('Neuron #', fontsize=14)
-        x_locs = np.arange(n_modes)
         ax_in.set_xticks(x_locs)
         ax_in.set_xticklabels(fb_names, rotation=90, fontsize=10)
+        ax_in.set_xlabel('Fourier Component', fontsize=14)
+        _save_fig(fig_in, self._out('dft_heatmap_in.png'))
 
-        # W_out DFT
-        ax_out = axes[1]
+        # W_out DFT (second-layer / W_L)
         W_out_np = ranked_W_out_dft.detach().cpu().numpy()
         abs_max_out = np.abs(W_out_np).max()
+        fig_out, ax_out = plt.subplots(figsize=(fig_w, fig_h), constrained_layout=True)
         im_out = ax_out.imshow(
             W_out_np,
             cmap=CMAP_DIVERGING, vmin=-abs_max_out, vmax=abs_max_out,
             aspect='auto'
         )
-        ax_out.set_title(r'Second-Layer $\xi_m$ after DFT', fontsize=18)
-        fig.colorbar(im_out, ax=ax_out, shrink=0.8)
+        ax_out.set_title(r'Second-Layer $\xi_m$ (W$_L$) after DFT', fontsize=16)
+        fig_out.colorbar(im_out, ax=ax_out, shrink=0.8)
         ax_out.set_yticks(y_locs)
         ax_out.set_yticklabels(y_locs, fontsize=10)
         ax_out.set_ylabel('Neuron #', fontsize=14)
         ax_out.set_xticks(x_locs)
         ax_out.set_xticklabels(fb_names, rotation=90, fontsize=10)
         ax_out.set_xlabel('Fourier Component', fontsize=14)
-
-        _save_fig(fig, self._out('full_training_para_origin.png'))
+        _save_fig(fig_out, self._out('dft_heatmap_out.png'))
 
         # ---- Line plots (raw weights + cosine fits, matching blog Figure 3) ----
         lineplot_idx = select_lineplot_neurons(list(range(num_neurons)), n=3)
@@ -606,7 +604,7 @@ class PlotGenerator:
 
             _save_fig(fig, self._out(f'{tag}.png'))
 
-        print("    Saved full_training_para_origin.png, lineplot_in.png, lineplot_out.png")
+        print("    Saved dft_heatmap_in.png, dft_heatmap_out.png, lineplot_in.png, lineplot_out.png")
 
     # ------------------------------------------------------------------
     # Tab 3: Phase Analysis
