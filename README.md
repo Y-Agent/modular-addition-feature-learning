@@ -160,8 +160,8 @@ Each modulus produces ~33 files in `precomputed_results/p_XXX/`:
 | `standard` | ReLU | AdamW | 5e-5 | 0 | 100% | 5,000 | Tabs 1–4 |
 | `grokking` | ReLU | AdamW | 1e-4 | 2.0 | 75% | 50,000 | Tabs 1, 6 |
 | `quad_random` | Quad | AdamW | 5e-5 | 0 | 100% | 5,000 | Tab 5 |
-| `quad_single_freq` | Quad | SGD | 0.1 | 0 | 100% | 5,000 | Tab 7 |
-| `relu_single_freq` | ReLU | SGD | 0.01 | 0 | 100% | 5,000 | Tab 7 |
+| `quad_single_freq` | Quad | SGD | 0.1 | 0 | 100% | 10,000 | Tab 7 |
+| `relu_single_freq` | ReLU | SGD | 0.01 | 0 | 100% | 10,000 | Tab 7 |
 
 ## Running a Single Experiment
 

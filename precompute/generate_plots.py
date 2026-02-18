@@ -1603,12 +1603,36 @@ class PlotGenerator:
                         'phi_out': phi_out,
                     })
 
-            # Select a neuron that shows clear phase alignment
-            # Pick neuron with largest final scale
+            # Select a neuron that shows interesting phase convergence dynamics.
+            # The lottery winner (largest final scale) already has ψ ≈ 2φ from
+            # the start, producing flat boring plots. Instead, pick a neuron that
+            # (a) has significant final scale (top quartile → actually learned),
+            # (b) had the largest initial phase misalignment |ψ₀ - 2φ₀|.
             final_records = [r for r in all_neuron_records if r['epoch'] == epochs[-1]]
             if not final_records:
                 continue
-            best_neuron = max(final_records, key=lambda r: r['scale_in'])['neuron']
+            init_records = [r for r in all_neuron_records if r['epoch'] == epochs[0]]
+            init_by_neuron = {r['neuron']: r for r in init_records}
+
+            # Keep neurons with final scale in top 25%
+            scales = sorted([r['scale_in'] for r in final_records], reverse=True)
+            scale_threshold = scales[max(0, len(scales) // 4 - 1)] if len(scales) >= 4 else scales[-1]
+            strong_neurons = [r for r in final_records if r['scale_in'] >= scale_threshold]
+
+            # Among strong neurons, pick the one with largest initial misalignment
+            best_neuron = None
+            best_misalign = -1.0
+            for r in strong_neurons:
+                n = r['neuron']
+                if n not in init_by_neuron:
+                    continue
+                ir = init_by_neuron[n]
+                misalign = abs(normalize_to_pi(ir['phi_out'] - 2 * ir['phi_in']))
+                if misalign > best_misalign:
+                    best_misalign = misalign
+                    best_neuron = n
+            if best_neuron is None:
+                best_neuron = max(final_records, key=lambda r: r['scale_in'])['neuron']
 
             # Extract trajectory for this neuron
             neuron_records = [r for r in all_neuron_records if r['neuron'] == best_neuron]
@@ -1667,16 +1691,18 @@ class PlotGenerator:
             _save_fig(fig, self._out(f'phase_align_{prefix}.png'))
 
             # ---- Decoded weights at timepoints ----
+            # Use fixed timepoints matching the notebook figures:
+            #   Quad: steps 0, 1000, 5000   ReLU: steps 0, 5000
             if prefix == 'quad':
-                keys = [0]
-                mid = min(epochs, key=lambda e: abs(e - 1000))
-                end = epochs[-1]
-                if mid not in keys:
-                    keys.append(mid)
-                if end not in keys:
-                    keys.append(end)
+                target_keys = [0, 1000, 5000]
             else:
-                keys = [0, epochs[-1]]
+                target_keys = [0, 5000]
+            # Snap each target to the nearest available checkpoint epoch
+            keys = []
+            for t in target_keys:
+                nearest = min(epochs, key=lambda e: abs(e - t))
+                if nearest not in keys:
+                    keys.append(nearest)
 
             num_components = min(20, d_mlp)
             n = len(keys)

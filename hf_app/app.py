@@ -340,7 +340,10 @@ def load_json_file(p, filename):
 def safe_img(p, filename):
     """Return image path or None (Gradio handles None gracefully)."""
     path = os.path.join(_prime_dir(p), f"p{p:03d}_{filename}")
-    return path if os.path.exists(path) else None
+    exists = os.path.exists(path)
+    if not exists:
+        logger.warning(f"Image not found: {path}")
+    return path if exists else None
 
 
 # ---------------------------------------------------------------------------
@@ -1255,6 +1258,13 @@ Use the slider to scrub through training epochs and watch the accuracy grid evol
             outputs=[current_p] + all_outputs,
         )
 
+        # Trigger initial load so tabs aren't empty on page load
+        app.load(
+            fn=p_change_and_store,
+            inputs=[p_dropdown],
+            outputs=[current_p] + all_outputs,
+        )
+
         # --- Neuron dropdown handler ---
         def on_neuron_change(neuron_key, p):
             data = load_json_file(p, "neuron_spectra.json")
@@ -1371,5 +1381,21 @@ Use the slider to scrub through training epochs and watch the accuracy grid evol
 
 
 if __name__ == "__main__":
+    # Startup diagnostics
+    print(f"PROJECT_ROOT: {PROJECT_ROOT}")
+    print(f"RESULTS_DIR:  {RESULTS_DIR}")
+    print(f"RESULTS_DIR exists: {os.path.exists(RESULTS_DIR)}")
+    if os.path.exists(RESULTS_DIR):
+        dirs = sorted(os.listdir(RESULTS_DIR))
+        print(f"Result dirs: {dirs}")
+        for d in dirs[:2]:
+            dpath = os.path.join(RESULTS_DIR, d)
+            files = os.listdir(dpath) if os.path.isdir(dpath) else []
+            print(f"  {d}: {len(files)} files")
+            for f in sorted(files)[:5]:
+                print(f"    {f}")
+    else:
+        print("WARNING: RESULTS_DIR does not exist!")
+
     app = create_app()
-    app.launch(theme=gr.themes.Soft(), css=CUSTOM_CSS)
+    app.launch(theme=gr.themes.Soft(), css=CUSTOM_CSS, ssr_mode=False)
