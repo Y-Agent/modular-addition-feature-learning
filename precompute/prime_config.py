@@ -1,19 +1,22 @@
 """
-Configuration for all primes and training runs.
+Configuration for all moduli and training runs.
 Defines the d_mlp sizing formula and the 5 training run configurations.
+p can be any odd number >= 3 (not restricted to primes).
 """
 import math
 
 
-def get_primes(low=3, high=199):
-    """Return all primes in [low, high]."""
-    primes = []
+def get_moduli(low=3, high=199):
+    """Return all odd numbers in [low, high]."""
+    moduli = []
     for n in range(low, high + 1):
-        if n < 2:
-            continue
-        if all(n % i != 0 for i in range(2, int(n**0.5) + 1)):
-            primes.append(n)
-    return primes
+        if n >= 3 and n % 2 == 1:
+            moduli.append(n)
+    return moduli
+
+
+# Keep old name as alias for backward compatibility
+get_primes = get_moduli
 
 
 def compute_d_mlp(p: int) -> int:
@@ -26,7 +29,17 @@ def compute_d_mlp(p: int) -> int:
     return max(512, math.ceil(ratio * p * p))
 
 
-# 5 training run configurations per prime
+# Minimum p overall (p=2 has 0 non-DC frequencies, making Fourier analysis degenerate)
+MIN_P = 3
+
+# Minimum p for grokking experiments (need enough test data for meaningful split)
+MIN_P_GROKKING = 19
+
+# Backward-compatible aliases
+MIN_PRIME = MIN_P
+MIN_PRIME_GROKKING = MIN_P_GROKKING
+
+# 5 training run configurations per p
 TRAINING_RUNS = {
     "standard": {
         "embed_type": "one_hot",
@@ -118,10 +131,5 @@ ANALYTICAL_CONFIGS = {
         "init_phi_case2": -0.72,
         "init_psi_case2": -2.91,
         "amplitude": 0.02,
-    },
-    "frequency_subset": {
-        "neuron_budget": 128,
-        "freq_counts": [1, 2, 4, 8],  # plus full
-        "phase_multipliers": [0.4, 0.8, 1.2, 1.6, 2.0],  # multiplied by pi
     },
 }

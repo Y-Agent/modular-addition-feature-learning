@@ -9,21 +9,51 @@ from collections import Counter
 
 def select_top_neurons_by_frequency(max_freq_ls, W_in_decode, n=20):
     """
-    Select top N neurons sorted by their dominant frequency then by magnitude.
+    Select top N neurons covering all frequencies (round-robin).
     Used for heatmap plots (Tab 2).
+
+    Picks the highest-magnitude neuron from each frequency in turn,
+    cycling through frequencies until n neurons are selected. This ensures
+    the heatmap shows diversification across all frequencies, matching
+    the blog's Figure 2.
 
     Returns list of neuron indices into the original d_mlp-sized arrays.
     """
     d_mlp = W_in_decode.shape[0]
     magnitudes = W_in_decode.abs().max(dim=1).values
 
-    # Sort by (freq ascending, magnitude descending)
-    sort_keys = [(max_freq_ls[i], -magnitudes[i].item(), i) for i in range(d_mlp)]
-    sort_keys.sort()
+    # Group neurons by their dominant frequency, sorted by magnitude (descending)
+    from collections import defaultdict
+    freq_groups = defaultdict(list)
+    for i in range(d_mlp):
+        f = max_freq_ls[i]
+        if f > 0:  # skip DC neurons
+            freq_groups[f].append((magnitudes[i].item(), i))
 
-    # Return the original neuron indices, in sorted order
-    sorted_indices = [k[2] for k in sort_keys]
-    return sorted_indices[:min(n, d_mlp)]
+    # Sort each group by magnitude descending
+    for f in freq_groups:
+        freq_groups[f].sort(key=lambda x: -x[0])
+
+    # Round-robin across frequencies (ascending order)
+    freqs_sorted = sorted(freq_groups.keys())
+    selected = []
+    pointers = {f: 0 for f in freqs_sorted}
+
+    while len(selected) < min(n, d_mlp) and freqs_sorted:
+        exhausted = []
+        for f in freqs_sorted:
+            if len(selected) >= n:
+                break
+            if pointers[f] < len(freq_groups[f]):
+                _, idx = freq_groups[f][pointers[f]]
+                selected.append(idx)
+                pointers[f] += 1
+            else:
+                exhausted.append(f)
+        for f in exhausted:
+            freqs_sorted.remove(f)
+
+    return selected
 
 
 def select_lineplot_neurons(sorted_indices, n=3):

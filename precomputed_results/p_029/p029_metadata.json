@@ -1,0 +1,88 @@
+{
+  "prime": 29,
+  "d_mlp": 814,
+  "training_runs": {
+    "standard": {
+      "act_type": "ReLU",
+      "lr": 5e-05,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "random",
+      "init_scale": 0.1,
+      "optimizer": "AdamW"
+    },
+    "grokking": {
+      "act_type": "ReLU",
+      "lr": 0.0001,
+      "weight_decay": 2.0,
+      "num_epochs": 50000,
+      "frac_train": 0.75,
+      "init_type": "random",
+      "init_scale": 0.1,
+      "optimizer": "AdamW"
+    },
+    "quad_random": {
+      "act_type": "Quad",
+      "lr": 5e-05,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "random",
+      "init_scale": 0.1,
+      "optimizer": "AdamW"
+    },
+    "quad_single_freq": {
+      "act_type": "Quad",
+      "lr": 0.1,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "single-freq",
+      "init_scale": 0.02,
+      "optimizer": "SGD"
+    },
+    "relu_single_freq": {
+      "act_type": "ReLU",
+      "lr": 0.01,
+      "weight_decay": 0,
+      "num_epochs": 5000,
+      "frac_train": 1.0,
+      "init_type": "single-freq",
+      "init_scale": 0.002,
+      "optimizer": "SGD"
+    }
+  },
+  "final_metrics": {
+    "standard": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 0.0031706688459962606,
+      "test_loss": 0.0031706688459962606
+    },
+    "grokking": {
+      "train_acc": 1.0,
+      "test_acc": 0.995260663507109,
+      "train_loss": 5.208294169278815e-06,
+      "test_loss": 0.0854611024260521
+    },
+    "quad_random": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 0.0004651979834306985,
+      "test_loss": 0.0004651979834306985
+    },
+    "quad_single_freq": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 3.3530149459838867,
+      "test_loss": 3.3530149459838867
+    },
+    "relu_single_freq": {
+      "train_acc": 1.0,
+      "test_acc": 1.0,
+      "train_loss": 3.3664848804473877,
+      "test_loss": 3.3664848804473877
+    }
+  }
+}

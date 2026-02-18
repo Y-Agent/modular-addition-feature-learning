@@ -8,3 +8,11 @@ notebooks/simulate_dynamics.ipynb
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Model checkpoints (too large for git; regenerate with precompute/run_pipeline.sh)
+trained_models/
+saved_models/
+
+# OS files
+.DS_Store
+tmp/
