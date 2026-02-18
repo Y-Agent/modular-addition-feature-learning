@@ -1176,7 +1176,7 @@ Use the slider to scrub through training epochs and watch the accuracy grid evol
 
 **Left -- Phase alignment:** Tracks the input phase $\phi_m^\star$, output phase $\psi_m^\star$, and doubled input phase $2\phi_m^\star$ of the dominant frequency in a single neuron over training. The theory predicts $\psi \to 2\phi$; here we see $\psi$ (red) and $2\phi$ (blue) converge and overlap, confirming phase alignment. The phases lock in early while magnitudes are still small.
 
-**Right -- DFT heatmaps:** Decoded weights in Fourier space at key training steps. At step 0, the neuron starts with energy at a single frequency (by construction -- single-frequency initialization). At later steps, the dominant frequency grows while all other frequencies stay at zero. This confirms the **single-frequency preservation theorem**: Fourier orthogonality prevents energy leakage between modes.""")
+**Right -- DFT heatmaps:** Decoded weights in Fourier space at steps 0, 1000, and 5000. At step 0, the neuron starts with energy at a single frequency (by construction -- single-frequency initialization). By step 1000, the dominant frequency begins to grow. By step 5000, it dominates while all other frequencies stay near zero. This confirms the **single-frequency preservation theorem**: Fourier orthogonality prevents energy leakage between modes.""")
                 with gr.Row():
                     t7_pa_quad = gr.Image(label="Phase Alignment (Quad)", type="filepath")
                     t7_sf_quad = gr.Image(label="Decoded Weights (Quad)", type="filepath")
@@ -1184,7 +1184,7 @@ Use the slider to scrub through training epochs and watch the accuracy grid evol
 
 **Left -- Phase alignment:** Same as quadratic above, but with ReLU. The qualitative behavior is identical: $\psi$ converges to $2\phi$. Minor quantitative differences arise because ReLU is not exactly $x^2$.
 
-**Right -- DFT heatmaps:** Unlike quadratic, ReLU leaks small amounts of energy to **harmonic multiples** of the dominant frequency ($3k^\star, 5k^\star, \ldots$ for input weights; $2k^\star, 3k^\star, \ldots$ for output weights). This leakage decays as $O(r^{-2})$ where $r$ is the harmonic order, so the dominant frequency remains overwhelmingly dominant. The faint "stripes" at harmonic positions are this leakage.""")
+**Right -- DFT heatmaps:** Same three snapshots (steps 0, 1000, 5000). Unlike quadratic, ReLU leaks small amounts of energy to **harmonic multiples** of the dominant frequency ($3k^\star, 5k^\star, \ldots$ for input weights; $2k^\star, 3k^\star, \ldots$ for output weights). This leakage decays as $O(r^{-2})$ where $r$ is the harmonic order, so the dominant frequency remains overwhelmingly dominant. The faint "stripes" at harmonic positions are this leakage.""")
                 with gr.Row():
                     t7_pa_relu = gr.Image(label="Phase Alignment (ReLU)", type="filepath")
                     t7_sf_relu = gr.Image(label="Decoded Weights (ReLU)", type="filepath")
