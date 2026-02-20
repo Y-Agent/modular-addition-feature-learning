@@ -5,7 +5,7 @@
 **Jianliang He, Leda Wang, Siyu Chen, Zhuoran Yang**
 *Department of Statistics and Data Science, Yale University*
 
-[[arXiv (coming soon)](#)] [[Blog](https://y-agent.github.io/posts/modular_addition_feature_learning/)] [[Interactive Demo](https://huggingface.co/spaces/y-agent/modular-addition-feature-learning)]
+[[arXiv](https://arxiv.org/abs/2602.16849)] [[Blog](https://y-agent.github.io/posts/modular_addition_feature_learning/)] [[Interactive Demo](https://huggingface.co/spaces/y-agent/modular-addition-feature-learning)]
 
 ---
 
@@ -204,7 +204,7 @@ modular-addition-feature-learning/
 @article{he2025modular,
   title={On the Mechanism and Dynamics of Modular Addition: Fourier Features, Lottery Ticket, and Grokking},
   author={He, Jianliang and Wang, Leda and Chen, Siyu and Yang, Zhuoran},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  journal={arXiv preprint arXiv:2602.16849},
   year={2025}
 }
 ```
